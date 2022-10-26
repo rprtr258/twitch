@@ -95,9 +95,15 @@ var app = cli.App{
 					return err
 				}
 
-				message, err := readStdin()
-				if err != nil {
-					return err
+				var message string
+				if ctx.Args().Len() > 0 {
+					message = strings.Join(ctx.Args().Slice(), " ")
+				} else {
+					var err error
+					message, err = readStdin()
+					if err != nil {
+						return err
+					}
 				}
 
 				client := twitch.NewClient(authData.Nick, authData.Token)
