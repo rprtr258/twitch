@@ -136,7 +136,7 @@ var app = cli.App{
 			Name:  "rewards",
 			Usage: "buy/list rewards",
 			Action: func(ctx *cli.Context) error {
-				main2()
+				claimReward()
 				return nil
 			},
 		},
@@ -156,7 +156,7 @@ func readStdin() (string, error) {
 	return strings.Join(input, " "), nil
 }
 
-func main2() error {
+func claimReward() error {
 	client := &http.Client{}
 
 	data, err := json.Marshal([]map[string]any{{
@@ -166,12 +166,12 @@ func main2() error {
 			"sha256Hash": "d56249a7adb4978898ea3412e196688d4ac3cea1c0c2dfd65561d229ea5dcc42",
 		}},
 		"variables": map[string]any{"input": map[string]any{
-			"channelID": "70930005",
-			"cost":      1,
-			// "textInput":     time.Now().Format(time.ANSIC),
-			"prompt":        nil,
-			"rewardID":      "50590c98-595b-49e2-a997-e22641bbfda0",
-			"title":         "нас рать",
+			"channelID": "70930005", // TODO: arg
+			"cost":      1,          // TODO: arg
+			// "textInput":     time.Now().Format(time.ANSIC), // TODO: arg
+			"prompt":        nil,                                    // TODO: arg
+			"rewardID":      "50590c98-595b-49e2-a997-e22641bbfda0", // TODO: arg
+			"title":         "нас рать",                             // TODO: arg
 			"transactionID": uuid.New().String(),
 		}},
 	}})
