@@ -136,7 +136,71 @@ var app = cli.App{
 			Name:  "rewards",
 			Usage: "buy/list rewards",
 			Action: func(ctx *cli.Context) error {
-				claimReward()
+				client := &http.Client{}
+
+				data, err := json.Marshal([]map[string]any{{
+					"operationName": "RedeemCustomReward",
+					"extensions": map[string]any{"persistedQuery": map[string]any{
+						"version":    1,
+						"sha256Hash": "d56249a7adb4978898ea3412e196688d4ac3cea1c0c2dfd65561d229ea5dcc42",
+					}},
+					"variables": map[string]any{"input": map[string]any{
+						"channelID": "70930005", // TODO: arg
+						"cost":      1,          // TODO: arg
+						// "textInput":     time.Now().Format(time.ANSIC), // TODO: arg
+						"prompt":        nil,                                    // TODO: arg
+						"rewardID":      "50590c98-595b-49e2-a997-e22641bbfda0", // TODO: arg
+						"title":         "нас рать",                             // TODO: arg
+						"transactionID": uuid.New().String(),
+					}},
+				}})
+				if err != nil {
+					return err
+				}
+
+				req, err := http.NewRequest(
+					"POST",
+					"https://gql.twitch.tv/gql#origin=twilight",
+					bytes.NewReader(data),
+				)
+				if err != nil {
+					return err
+				}
+
+				req.Header = map[string][]string{
+					"Referer":          {"https://www.twitch.tv/"},
+					"Authorization":    {"OAuth " + os.Getenv("HEADER_AUTHORIZATION")},
+					"Client-Id":        {os.Getenv("HEADER_CLIENT_ID")},
+					"Client-Integrity": {os.Getenv("HEADER_CLIENT_INTEGRITY")},
+					"X-Device-Id":      {os.Getenv("HEADER_DEVICE_ID")},
+				}
+
+				resp, err := client.Do(req)
+				if err != nil {
+					return err
+				}
+				defer resp.Body.Close()
+
+				type response []struct {
+					Data struct {
+						RedeemCommunityPointsCustomReward struct {
+							Error    *string `json:"error"`
+							Typename string  `json:"__typename"`
+						} `json:"redeemCommunityPointsCustomReward"`
+					} `json:"data"`
+					Extensions struct {
+						DurationMilliseconds int    `json:"durationMilliseconds"`
+						OperationName        string `json:"operationName"`
+						RequestID            string `json:"requestID"`
+					} `json:"extensions"`
+				}
+				var resp2 response
+				if err := json.NewDecoder(resp.Body).Decode(&resp2); err != nil {
+					return err
+				}
+
+				fmt.Printf("%+v\n", resp2)
+
 				return nil
 			},
 		},
@@ -154,74 +218,6 @@ func readStdin() (string, error) {
 	}
 
 	return strings.Join(input, " "), nil
-}
-
-func claimReward() error {
-	client := &http.Client{}
-
-	data, err := json.Marshal([]map[string]any{{
-		"operationName": "RedeemCustomReward",
-		"extensions": map[string]any{"persistedQuery": map[string]any{
-			"version":    1,
-			"sha256Hash": "d56249a7adb4978898ea3412e196688d4ac3cea1c0c2dfd65561d229ea5dcc42",
-		}},
-		"variables": map[string]any{"input": map[string]any{
-			"channelID": "70930005", // TODO: arg
-			"cost":      1,          // TODO: arg
-			// "textInput":     time.Now().Format(time.ANSIC), // TODO: arg
-			"prompt":        nil,                                    // TODO: arg
-			"rewardID":      "50590c98-595b-49e2-a997-e22641bbfda0", // TODO: arg
-			"title":         "нас рать",                             // TODO: arg
-			"transactionID": uuid.New().String(),
-		}},
-	}})
-	if err != nil {
-		return err
-	}
-
-	req, err := http.NewRequest(
-		"POST",
-		"https://gql.twitch.tv/gql#origin=twilight",
-		bytes.NewReader(data),
-	)
-	if err != nil {
-		return err
-	}
-
-	req.Header = map[string][]string{
-		"Referer":          {"https://www.twitch.tv/"},
-		"Authorization":    {"OAuth " + os.Getenv("HEADER_AUTHORIZATION")},
-		"Client-Id":        {os.Getenv("HEADER_CLIENT_ID")},
-		"Client-Integrity": {os.Getenv("HEADER_CLIENT_INTEGRITY")},
-		"X-Device-Id":      {os.Getenv("HEADER_DEVICE_ID")},
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	type response []struct {
-		Data struct {
-			RedeemCommunityPointsCustomReward struct {
-				Error    *string `json:"error"`
-				Typename string  `json:"__typename"`
-			} `json:"redeemCommunityPointsCustomReward"`
-		} `json:"data"`
-		Extensions struct {
-			DurationMilliseconds int    `json:"durationMilliseconds"`
-			OperationName        string `json:"operationName"`
-			RequestID            string `json:"requestID"`
-		} `json:"extensions"`
-	}
-	var resp2 response
-	if err := json.NewDecoder(resp.Body).Decode(&resp2); err != nil {
-		return err
-	}
-
-	fmt.Printf("%+v\n", resp2)
-	return nil
 }
 
 func main() {
