@@ -136,6 +136,26 @@ var app = cli.App{
 			Name:  "rewards",
 			Usage: "buy/list rewards",
 			Action: func(ctx *cli.Context) error {
+				// ================ TODO: list rewards ================
+				// apiClient, err := helix.NewClient(&helix.Options{
+				// 	ClientID:        os.Getenv("HEADER_CLIENT_ID"),
+				// 	UserAccessToken: os.Getenv("HEADER_AUTHORIZATION"),
+				// })
+				// if err != nil {
+				// 	return err
+				// }
+
+				// // Required scope:
+				// resp, err := apiClient.GetCustomRewards(&helix.GetCustomRewardsParams{
+				// 	BroadcasterID: "70930005",
+				// })
+				// if err != nil {
+				// 	return err
+				// }
+
+				// fmt.Printf("%+v\n", resp)
+				// ================ TODO: list rewards ================
+
 				client := &http.Client{}
 
 				data, err := json.Marshal([]map[string]any{{
