@@ -189,15 +189,14 @@ func main2() error {
 		return err
 	}
 
-	headers := map[string]string{
+	for name, value := range map[string]string{
 		"Referer":          "https://www.twitch.tv/",
 		"Authorization":    "OAuth " + os.Getenv("HEADER_AUTHORIZATION"),
 		"Client-Id":        os.Getenv("HEADER_CLIENT_ID"),
 		"Client-Integrity": os.Getenv("HEADER_CLIENT_INTEGRITY"),
 		"X-Device-Id":      os.Getenv("HEADER_DEVICE_ID"),
-	}
-	for name, value := range headers {
-		req.Header.Set(name, value)
+	} {
+		req.Header[name] = []string{value}
 	}
 
 	resp, err := client.Do(req)
