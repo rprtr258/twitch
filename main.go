@@ -106,6 +106,18 @@ var app = cli.App{
 					}
 				}
 
+				// s = socket.socket()
+				// s.connect((HOST, PORT))
+				// s.send("PASS {}\r\n".format(PASS).encode("utf-8"))
+				// s.send("NICK {}\r\n".format(NICK).encode("utf-8"))
+				// s.send("JOIN {}\r\n".format(CHAN).encode("utf-8"))
+
+				// track = input()
+				// print(track)
+				// sock.send(f"PRIVMSG {CHAN} :{msg}\r\n".encode("utf-8"))
+
+				// s.close()
+
 				client := twitch.NewClient(authData.Nick, authData.Token)
 				go client.Connect()
 				for i := 0; i < count; i++ {

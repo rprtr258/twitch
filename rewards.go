@@ -11,7 +11,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func main() {
+func main2() {
 	client := &http.Client{}
 
 	data, _ := json.Marshal([]map[string]any{{
