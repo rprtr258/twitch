@@ -2,15 +2,19 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
+	"net/http"
 	"os"
 	"path"
 	"strings"
 	"time"
 
 	"github.com/gempir/go-twitch-irc/v3"
+	"github.com/google/uuid"
 	"github.com/urfave/cli/v2"
 )
 
@@ -129,6 +133,14 @@ var app = cli.App{
 				return nil
 			},
 		},
+		{
+			Name:  "rewards",
+			Usage: "buy/list rewards",
+			Action: func(ctx *cli.Context) error {
+				main2()
+				return nil
+			},
+		},
 	},
 }
 
@@ -143,6 +155,64 @@ func readStdin() (string, error) {
 	}
 
 	return strings.Join(input, " "), nil
+}
+
+func main2() error {
+	client := &http.Client{}
+
+	data, err := json.Marshal([]map[string]any{{
+		"operationName": "RedeemCustomReward",
+		"extensions": map[string]any{"persistedQuery": map[string]any{
+			"version":    1,
+			"sha256Hash": "d56249a7adb4978898ea3412e196688d4ac3cea1c0c2dfd65561d229ea5dcc42",
+		}},
+		"variables": map[string]any{"input": map[string]any{
+			"channelID": "70930005",
+			"cost":      1,
+			// "textInput":     time.Now().Format(time.ANSIC),
+			"prompt":        nil,
+			"rewardID":      "50590c98-595b-49e2-a997-e22641bbfda0",
+			"title":         "нас рать",
+			"transactionID": uuid.New().String(),
+		}},
+	}})
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest(
+		"POST",
+		"https://gql.twitch.tv/gql#origin=twilight",
+		bytes.NewReader(data),
+	)
+	if err != nil {
+		return err
+	}
+
+	headers := map[string]string{
+		"Referer":          "https://www.twitch.tv/",
+		"Authorization":    "OAuth " + os.Getenv("HEADER_AUTHORIZATION"),
+		"Client-Id":        os.Getenv("HEADER_CLIENT_ID"),
+		"Client-Integrity": os.Getenv("HEADER_CLIENT_INTEGRITY"),
+		"X-Device-Id":      os.Getenv("HEADER_DEVICE_ID"),
+	}
+	for name, value := range headers {
+		req.Header.Set(name, value)
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	bodyText, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("%s\n", bodyText)
+	return nil
 }
 
 func main() {
