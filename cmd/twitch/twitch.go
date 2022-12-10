@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -203,12 +202,25 @@ func main2() error {
 	}
 	defer resp.Body.Close()
 
-	bodyText, err := io.ReadAll(resp.Body)
-	if err != nil {
+	type response []struct {
+		Data struct {
+			RedeemCommunityPointsCustomReward struct {
+				Error    *string `json:"error"`
+				Typename string  `json:"__typename"`
+			} `json:"redeemCommunityPointsCustomReward"`
+		} `json:"data"`
+		Extensions struct {
+			DurationMilliseconds int    `json:"durationMilliseconds"`
+			OperationName        string `json:"operationName"`
+			RequestID            string `json:"requestID"`
+		} `json:"extensions"`
+	}
+	var resp2 response
+	if err := json.NewDecoder(resp.Body).Decode(&resp2); err != nil {
 		return err
 	}
 
-	fmt.Printf("%s\n", bodyText)
+	fmt.Printf("%+v\n", resp2)
 	return nil
 }
 
