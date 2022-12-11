@@ -2,6 +2,7 @@ package twitch
 
 import (
 	Z "github.com/rwxrob/bonzai/z"
+	"github.com/rwxrob/conf"
 	"github.com/rwxrob/help"
 	"github.com/rwxrob/vars"
 )
@@ -20,7 +21,7 @@ var Cmd = &Z.Cmd{
 			Name:  "login",
 			Usage: "login using twitch OAUTH token",
 			Commands: []*Z.Cmd{
-				help.Cmd, vars.Cmd,
+				help.Cmd, vars.Cmd, conf.Cmd,
 				// conf
 				// &cli.StringFlag{Name: "nick", Usage: "user nickname", Required: true},
 				// &cli.StringFlag{Name: "token", Usage: "oauth token", Required: true},
