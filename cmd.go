@@ -1,6 +1,14 @@
 package twitch
 
 import (
+	"bufio"
+	"fmt"
+	"net"
+	"os"
+	"strconv"
+	"strings"
+	"time"
+
 	Z "github.com/rwxrob/bonzai/z"
 	"github.com/rwxrob/conf"
 	"github.com/rwxrob/help"
@@ -16,96 +24,88 @@ var Cmd = &Z.Cmd{
 	Name:    "twitch",
 	Summary: "various utilities for twitch chat",
 	Commands: []*Z.Cmd{
-		help.Cmd, // vars.Cmd, conf.Cmd,
-		{
-			Name:  "login",
-			Usage: "login using twitch OAUTH token",
-			Commands: []*Z.Cmd{
-				help.Cmd, vars.Cmd, conf.Cmd,
-				// conf
-				// &cli.StringFlag{Name: "nick", Usage: "user nickname", Required: true},
-				// &cli.StringFlag{Name: "token", Usage: "oauth token", Required: true},
-			},
-			Call: func(x *Z.Cmd, args ...string) error {
-				// nick, err := x.Caller.C("nick")
-				// if err != nil {
-				// 	return err
-				// }
-				// if nick == "" {
-				// 	return errors.New("nick is not set")
-				// }
-				// x.Caller.Set("nick", nick)
-
-				// token, err := x.Caller.C("token")
-				// if err != nil {
-				// 	return err
-				// }
-				// if token == "" {
-				// 	return errors.New("token is not set")
-				// }
-				// x.Caller.Set("token", token)
-
-				return nil
-			},
-		},
+		help.Cmd, vars.Cmd, conf.Cmd,
 		{
 			Name:  "send",
 			Usage: "send message to chat",
-			// &cli.StringFlag{Name: "channel", Aliases: []string{"c"}, Usage: "the channel you want to join", Required: true},
-			// &cli.IntFlag{Name: "count", Aliases: []string{"n"}, Usage: "how many times send message", Value: 1},
-			// &cli.DurationFlag{Name: "delay", Aliases: []string{"d"}, Usage: "delay between messages", Value: time.Second},
 			Call: func(x *Z.Cmd, args ...string) error {
-				// nick, err := x.Caller.C("count")
-				// if err != nil {
-				// 	return err
-				// }
-				// if nick == "" {
-				// 	return errors.New("nick is not set")
-				// }
-				// count := ctx.Int("count")
-				// channel := ctx.String("channel")
-				// delay := ctx.Duration("delay")
+				nick, err := x.Caller.Get("nick")
+				if err != nil {
+					return err
+				}
+				if nick == "" {
+					return fmt.Errorf("%s var is not defined", "nick")
+				}
 
-				// data, err := os.ReadFile(_tokenFile)
-				// if err != nil {
-				// 	return fmt.Errorf("getting token failed, try login again: %w", err)
-				// }
+				token, err := x.Caller.Get("token")
+				if err != nil {
+					return err
+				}
+				if token == "" {
+					return fmt.Errorf("%s var is not defined", "token")
+				}
 
-				// var authData AuthData
-				// if err := json.Unmarshal(data, &authData); err != nil {
-				// 	return err
-				// }
+				// count: "how many times send message"
+				count := 1
+				countStr, err := x.Caller.Get("count")
+				if err == nil && countStr != "" {
+					countInt, err := strconv.Atoi(countStr)
+					if err == nil {
+						count = countInt
+					}
+				}
 
-				// var message string
-				// if ctx.Args().Len() > 0 {
-				// 	message = strings.Join(ctx.Args().Slice(), " ")
-				// } else {
-				// 	var err error
-				// 	message, err = readStdin()
-				// 	if err != nil {
-				// 		return err
-				// 	}
-				// }
+				// channel: "the channel you want to join"
+				channel := nick
+				channelStr, err := x.Caller.Get("channel")
+				if err == nil && channelStr != "" {
+					channel = channelStr
+				}
 
-				// // s = socket.socket()
-				// // s.connect((HOST, PORT))
-				// // s.send("PASS {}\r\n".format(PASS).encode("utf-8"))
-				// // s.send("NICK {}\r\n".format(NICK).encode("utf-8"))
-				// // s.send("JOIN {}\r\n".format(CHAN).encode("utf-8"))
+				// delay: "delay between messages"
+				delay := 1 * time.Second
+				delayStr, err := x.Caller.Get("delay")
+				if err == nil && delayStr != "" {
+					delayDuration, err := time.ParseDuration(delayStr)
+					if err == nil {
+						delay = delayDuration
+					}
+				}
 
-				// // track = input()
-				// // print(track)
-				// // sock.send(f"PRIVMSG {CHAN} :{msg}\r\n".encode("utf-8"))
+				var message string
+				if len(args) > 0 {
+					message = strings.Join(args, " ")
+				} else {
+					var err error
+					message, err = readStdin()
+					if err != nil {
+						return err
+					}
+				}
 
-				// // s.close()
+				fmt.Println(
+					count,
+					delay,
+				)
 
-				// client := twitch.NewClient(authData.Nick, authData.Token)
-				// go client.Connect()
-				// for i := 0; i < count; i++ {
-				// 	client.Say(channel, string(message))
-				// 	fmt.Println(string(message))
-				// 	time.Sleep(delay)
-				// }
+				conn, err := net.Dial("tcp", "irc.chat.twitch.tv:6667")
+				if err != nil {
+					return err
+				}
+				defer conn.Close()
+
+				if _, err := conn.Write([]byte(fmt.Sprintf(
+					"PASS %s\r\n"+
+						"NICK %s\r\n"+
+						"JOIN #%s\r\n"+
+						"PRIVMSG #%s :%s\r\n",
+					token,
+					nick,
+					channel,
+					channel, message,
+				))); err != nil {
+					return err
+				}
 
 				return nil
 			},
@@ -113,15 +113,15 @@ var Cmd = &Z.Cmd{
 	},
 }
 
-// func readStdin() (string, error) {
-// 	input := []string{}
-// 	buf := bufio.NewScanner(os.Stdin)
-// 	for buf.Scan() {
-// 		input = append(input, buf.Text())
-// 	}
-// 	if err := buf.Err(); err != nil {
-// 		return "", err
-// 	}
+func readStdin() (string, error) {
+	var input string
+	buf := bufio.NewScanner(os.Stdin)
+	for buf.Scan() {
+		input = buf.Text()
+	}
+	if err := buf.Err(); err != nil {
+		return "", err
+	}
 
-// 	return strings.Join(input, " "), nil
-// }
+	return input, nil
+}
