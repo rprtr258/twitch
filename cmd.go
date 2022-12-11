@@ -2,45 +2,51 @@ package twitch
 
 import (
 	Z "github.com/rwxrob/bonzai/z"
-	"github.com/rwxrob/conf"
 	"github.com/rwxrob/help"
 	"github.com/rwxrob/vars"
 )
 
+func init() {
+	Z.Conf.SoftInit()
+	Z.Vars.SoftInit()
+}
+
 var Cmd = &Z.Cmd{
-	Name: "twitch",
+	Name:    "twitch",
+	Summary: "various utilities for twitch chat",
 	Commands: []*Z.Cmd{
-		help.Cmd, vars.Cmd, conf.Cmd,
-		// {
-		// 	Name:  "login",
-		// 	Usage: "login using OAUTH token",
-		// 	Flags: []cli.Flag{
-		// 		&cli.StringFlag{
-		// 			Name:     "nick",
-		// 			Usage:    "user nickname",
-		// 			Required: true,
-		// 		},
-		// 		&cli.StringFlag{
-		// 			Name:     "token",
-		// 			Usage:    "oauth token",
-		// 			Required: true,
-		// 		},
-		// 	},
-		// 	Action: func(ctx *cli.Context) error {
-		// 		nick := ctx.String("nick")
-		// 		token := ctx.String("token")
+		help.Cmd, // vars.Cmd, conf.Cmd,
+		{
+			Name:  "login",
+			Usage: "login using twitch OAUTH token",
+			Commands: []*Z.Cmd{
+				help.Cmd, vars.Cmd,
+				// conf
+				// &cli.StringFlag{Name: "nick", Usage: "user nickname", Required: true},
+				// &cli.StringFlag{Name: "token", Usage: "oauth token", Required: true},
+			},
+			Call: func(x *Z.Cmd, args ...string) error {
+				// nick, err := x.Caller.C("nick")
+				// if err != nil {
+				// 	return err
+				// }
+				// if nick == "" {
+				// 	return errors.New("nick is not set")
+				// }
+				// x.Caller.Set("nick", nick)
 
-		// 		data, err := json.Marshal(AuthData{
-		// 			Nick:  nick,
-		// 			Token: token,
-		// 		})
-		// 		if err != nil {
-		// 			return err
-		// 		}
+				// token, err := x.Caller.C("token")
+				// if err != nil {
+				// 	return err
+				// }
+				// if token == "" {
+				// 	return errors.New("token is not set")
+				// }
+				// x.Caller.Set("token", token)
 
-		// 		return os.WriteFile(_tokenFile, data, 0644)
-		// 	},
-		// },
+				return nil
+			},
+		},
 		// {
 		// 	Name:  "send",
 		// 	Usage: "send message to chat",
@@ -114,12 +120,17 @@ var Cmd = &Z.Cmd{
 		// 	},
 		// },
 	},
-	Shortcuts: Z.ArgMap{
-		`started`:    {`var`, `started`},
-		`duration`:   {`var`, `set`, `duration`},
-		`warn`:       {`var`, `set`, `warn`},
-		`prefix`:     {`var`, `set`, `prefix`},
-		`prefixwarn`: {`var`, `set`, `prefixwarn`},
-	},
-	Summary: "various utilities for twitch chat",
 }
+
+// func readStdin() (string, error) {
+// 	input := []string{}
+// 	buf := bufio.NewScanner(os.Stdin)
+// 	for buf.Scan() {
+// 		input = append(input, buf.Text())
+// 	}
+// 	if err := buf.Err(); err != nil {
+// 		return "", err
+// 	}
+
+// 	return strings.Join(input, " "), nil
+// }
