@@ -83,11 +83,6 @@ var Cmd = &Z.Cmd{
 					}
 				}
 
-				fmt.Println(
-					count,
-					delay,
-				)
-
 				conn, err := net.Dial("tcp", "irc.chat.twitch.tv:6667")
 				if err != nil {
 					return err
@@ -97,14 +92,22 @@ var Cmd = &Z.Cmd{
 				if _, err := conn.Write([]byte(fmt.Sprintf(
 					"PASS %s\r\n"+
 						"NICK %s\r\n"+
-						"JOIN #%s\r\n"+
-						"PRIVMSG #%s :%s\r\n",
+						"JOIN #%s\r\n",
 					token,
 					nick,
 					channel,
-					channel, message,
 				))); err != nil {
 					return err
+				}
+
+				for i := 0; i < count; i++ {
+					if _, err := conn.Write([]byte(fmt.Sprintf(
+						"PRIVMSG #%s :%s\r\n",
+						channel, message,
+					))); err != nil {
+						return err
+					}
+					time.Sleep(delay)
 				}
 
 				return nil
